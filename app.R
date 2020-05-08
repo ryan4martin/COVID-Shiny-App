@@ -181,6 +181,21 @@ server <- function(input, output) {
   # Render bar graph for output
   # Change title for new inputs
   output$Plot <- renderPlot({
+    
+  # Return an empty plot with "Data not available" printed 
+  # when selection was not in dataset
+  if (sum(filtered_df()$Total) == 0){
+    x_spot <- as.numeric((max(filtered_df()$date) - min(filtered_df()$date)) / 2)
+    x_spot <- min(filtered_df()$date) + x_spot
+    p <- ggplot(filtered_df(), aes(x = date, y = New)) +
+          geom_col() +
+          annotate('text', x = as.Date(x_spot), y = 0, label = 'Data not available', size = 12) +
+          labs(x = 'Date',
+               y = paste(input$aggregate),
+               caption = 'Data from Johns Hopkins University Center',
+               title = paste('Number of', input$aggregate, input$status, 'cases in', input$province, input$country, sep = ' '))
+    return(p)
+  } else {
   # If looking at new cases, plot 7 Day Rolling Average
   if (input$aggregate == 'New'){
       p <- ggplot(filtered_df(), aes(x = date, y = new)) +
@@ -200,7 +215,7 @@ server <- function(input, output) {
       labs(x = 'Date',
            caption = 'Data from Johns Hopkins University Center',
            title = paste('Number of', input$aggregate, input$status, 'cases in', input$province, input$country, sep = ' '))
-  }
+  }}
   # Change y-axis scale 
   if (input$scale == 'Linear'){
     p <- p + 
