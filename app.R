@@ -72,15 +72,18 @@ sum_data <- merged_data %>%
             new = sum(new),
             rolling_7day = sum(rolling_7day)) %>%
   mutate(province_state = 'All')
+
+# Identified countries that did not have "All' statistics when read in to add to the large dataframe
+country_level_counts <- sum_data %>%
+  anti_join(merged_data, by = c('country_region', 'status', 'date', 'province_state'))
   
 # Combine the datasets
-combined_data <- bind_rows(merged_data, sum_data) %>%
-  # Some geographic areas had two rows for each date
+combined_data <- merged_data  %>%
+  
+  #Add in 'All' for countries missing data
+  bind_rows(country_level_counts) %>%
+
   # Discard the one with 0 value and any rows with NA
-  group_by(province_state, country_region, status, date) %>%
-  arrange(total) %>%
-  slice(1) %>%
-  ungroup() %>%
   drop_na() %>%
   
   # Remove the cruise ships from Province/State
@@ -90,14 +93,10 @@ combined_data <- bind_rows(merged_data, sum_data) %>%
   # Convert character columns to factors
   # Relevel and arrange to have values of interest the ones shown at start up
   mutate_if(is.character, as.factor) %>%
-  mutate(province_state = relevel(province_state, ref = 'All')) %>%
-  group_by(country_region) %>%
-  arrange(province_state) %>%
-  ungroup() %>%
-  mutate(country_region = relevel(country_region, ref = 'Canada')) %>%
-  arrange(country_region) %>%
-  mutate(status = relevel(status, ref = 'confirmed')) %>%
-  arrange(status)
+  mutate(province_state = relevel(province_state, ref = 'All'),
+         country_region = relevel(country_region, ref = 'Canada'),
+         status = relevel(status, ref = 'confirmed')) %>%
+  arrange(province_state, country_region,status)
 
 # Set up Shiny UI
 ui <- fluidPage(
