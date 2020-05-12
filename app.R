@@ -66,7 +66,7 @@ merged_data <- map2(list(confirmed, confirmed_us, deaths, deaths_us, recovered),
 # Summarise data to country level totals
 sum_data <- merged_data %>%
   # Remove countries that did not have province/state level data and were already labelled as All
-  filter(province_state != 'All' & status != 'recovered') %>%
+  filter(province_state != 'All') %>%
   group_by(country_region, status, date) %>%
   summarise(total = sum(total),
             new = sum(new),
